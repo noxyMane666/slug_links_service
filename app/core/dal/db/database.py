@@ -5,11 +5,13 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from app.configurations.app_settings import DBSettings
+
 
 class AppDataBase:
-    def __init__(self, connection_string: str):
+    def __init__(self, settings: DBSettings):
         self.engine: AsyncEngine = create_async_engine(
-            connection_string,
+            settings.DB_CONNECTION_STRING,
             echo=False,
         )
         self.session_factory = async_sessionmaker(
