@@ -2,8 +2,12 @@ from sqlalchemy.exc import IntegrityError
 
 from app.abstractions.interfaces import SlugGenerator
 from app.core.dal.repository.slug_repository import SlugRepository
-from app.core.models.dto import SlugGenerationResultDTO, RedirectLookupResultDTO
 from app.exceptions.domain_exceptions import LongUrlNotFoundException, SlugAlreadyExistsException
+from app.core.models.dto import (
+    SlugGenerationResultDTO,
+    RedirectLookupResultDTO,
+    GenerationSlugRequestDTO
+)
 
 
 class SlugLinksService:
@@ -11,10 +15,10 @@ class SlugLinksService:
         self.sl_gen = sl_gen
         self.repo = slug_repo
 
-    async def generate_slug(self, long_url: str) -> SlugGenerationResultDTO:
+    async def generate_slug(self, long_url_dto: GenerationSlugRequestDTO) -> SlugGenerationResultDTO:
         slug = self.sl_gen.generate()
         try:
-            await self.repo.add_slug_to_db(slug, long_url)
+            await self.repo.add_slug_to_db(slug, str(long_url_dto.long_url))
             return SlugGenerationResultDTO(slug=slug)
         except IntegrityError:
             raise SlugAlreadyExistsException(slug)
