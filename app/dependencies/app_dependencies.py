@@ -1,9 +1,10 @@
 from fastapi import Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dal.repository.slug_repository import SlugRepository
-from app.services.slug_links_service import SlugLinksService
-from app.utlis.slug_generator import SlugGenerator
+from app.abstractions.interfaces import SlugGenerator
+from app.core.dal.repository.slug_repository import SlugRepository
+from app.core.services.slug_links_service import SlugLinksService
+from app.core.slug_generators.alph_slug_generator import AlphabetSlugGenerator
 
 
 async def get_db_session(request: Request):
@@ -12,8 +13,8 @@ async def get_db_session(request: Request):
     async with session_factory() as session:
         yield session
 
-def get_slug_generator():
-    return SlugGenerator()
+def get_slug_generator() -> SlugGenerator:
+    return AlphabetSlugGenerator()
 
 def get_slug_repo(session: AsyncSession = Depends(get_db_session)):
     return SlugRepository(session)

@@ -1,3 +1,4 @@
+from sqlalchemy.sql.expression import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -19,6 +20,10 @@ class AppDataBase:
             class_=AsyncSession,
             expire_on_commit=False,
         )
+
+    async def check_db_connection(self) -> None:
+        async with self.engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
 
     async def close(self):
         await self.engine.dispose()
