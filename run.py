@@ -6,9 +6,8 @@ import uvicorn
 app = create_app
 
 if __name__ == "__main__":
-    load_dotenv(".env")
     uvicorn.run(
-        app,
+        "run:app",
         host="127.0.0.1",
         port=8000,
         reload=True
