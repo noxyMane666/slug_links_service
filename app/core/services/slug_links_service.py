@@ -1,3 +1,4 @@
+from pydantic import HttpUrl
 from sqlalchemy.exc import IntegrityError
 
 from app.abstractions.interfaces import SlugGenerator
@@ -30,5 +31,5 @@ class SlugLinksService:
         if not long_url:
             raise LongUrlNotFoundException(slug)
 
-        return RedirectLookupResultDTO(long_url=long_url)
+        return RedirectLookupResultDTO(long_url=HttpUrl(long_url))
 

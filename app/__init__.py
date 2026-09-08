@@ -20,6 +20,7 @@ def create_app_lifespan(config: Configuration):
 
         try:
             await db.check_db_connection()
+            app.state.db = db
         except SQLAlchemyError as e:
             await db.close()
             raise RuntimeError("Couldn't connect to database") from e
