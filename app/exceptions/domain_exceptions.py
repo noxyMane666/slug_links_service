@@ -14,3 +14,10 @@ class SlugAlreadyExistsException(DomainException):
 
     def __str__(self):
         return f"The value already exists. Existed slug: {self._slug}"
+
+class SlugIdentifierCollision(DomainException):
+    def __init__(self, slug: str):
+        self._slug = slug
+
+    def __str__(self):
+        return f"Detected collision in slug identifier: {self._slug}"

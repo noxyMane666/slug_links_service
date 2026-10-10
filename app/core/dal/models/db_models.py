@@ -5,6 +5,7 @@ from uuid import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import (
     UUID as ALCHEMY_UUID,
+    Integer,
     String,
     DateTime,
     func
@@ -33,5 +34,9 @@ class ShortURL(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now()
+    )
+    redirect_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=True
     )
 
