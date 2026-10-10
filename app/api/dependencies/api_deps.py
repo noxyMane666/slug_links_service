@@ -1,7 +1,7 @@
 from fastapi import Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.abstractions.interfaces import SlugGenerator
+from app.core.slug_generators.interface import SlugGenerator
 from app.core.dal.repository.slug_repository import SlugRepository
 from app.core.services.slug_links_service import SlugLinksService
 from app.core.slug_generators.alph_slug_generator import AlphabetSlugGenerator
