@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Request, FastAPI
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -9,6 +11,8 @@ from app.exceptions.domain_exceptions import (
     LongUrlNotFoundException,
     SlugAlreadyExistsException
 )
+
+logger = logging.getLogger(__name__)
 
 _DOMAIN_EXCEPTIONS_STATUS_CODES: dict[type, int] = {
     LongUrlNotFoundException: 404,
@@ -39,12 +43,20 @@ class GlobalExceptionHandler:
     def handle(self, request: Request, exc: Exception) -> JSONResponse:
         if isinstance(exc, DomainException):
             status_code = _DOMAIN_EXCEPTIONS_STATUS_CODES.get(type(exc), _UNMAPPED_DOMAIN_EXCEPTION_STATUS_CODE)
+            logger.warning(
+                "Domain exception handled",
+                extra={"event": "domain_exception", "status_code": status_code, "exc_type": type(exc).__name__},
+            )
             return JSONResponse(
                 status_code=status_code,
                 content={"message": str(exc), "type": type(exc).__name__},
                 headers=self._generate_headers(request)
             )
         elif isinstance(exc, HTTPException):
+            logger.warning(
+                "HTTP exception handled",
+                extra={"event": "http_exception", "status_code": exc.status_code},
+            )
             return JSONResponse(
                 status_code=exc.status_code,
                 content={"message": exc.detail, "type": "HTTPException"},
@@ -52,12 +64,21 @@ class GlobalExceptionHandler:
             )
         elif isinstance(exc, RequestValidationError):
             details = jsonable_encoder(exc.errors())
+            logger.warning(
+                "Request validation failed",
+                extra={"event": "validation_error", "status_code": 422},
+            )
             return JSONResponse(
                 status_code=422,
                 content={"message": "ValidationError", "type": "RequestValidationError", "details": details},
                 headers=self._generate_headers(request)
             )
         else:
+            logger.error(
+                "Unhandled exception",
+                exc_info=exc,
+                extra={"event": "unhandled_exception", "status_code": 500},
+            )
             return JSONResponse(
                 status_code=500,
                 content={"message": "Internal Server Error", "type": "InternalError"},
