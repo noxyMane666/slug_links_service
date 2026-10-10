@@ -1,7 +1,7 @@
 import string
 from random import choice
 
-from app.abstractions.interfaces import SlugGenerator
+from app.core.slug_generators.interface import SlugGenerator
 
 
 class AlphabetSlugGenerator(SlugGenerator):
