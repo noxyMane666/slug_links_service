@@ -1,7 +1,12 @@
+import logging
+
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dal.models.db_models import ShortURL
+
+logger = logging.getLogger(__name__)
 
 
 class SlugRepository:
@@ -16,8 +21,13 @@ class SlugRepository:
         try:
             self._session.add(new_slug)
             await self._session.commit()
+        except IntegrityError:
+            await self._session.rollback()
+            logger.info("Slug collision on insert, transaction rolled back", extra={"event": "slug_collision"})
+            raise
         except Exception:
             await self._session.rollback()
+            logger.error("Unexpected DB error on slug insert, transaction rolled back", exc_info=True)
             raise
 
 

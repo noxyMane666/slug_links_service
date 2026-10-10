@@ -1,3 +1,5 @@
+import logging
+
 from pydantic import HttpUrl
 from sqlalchemy.exc import IntegrityError
 
@@ -10,6 +12,8 @@ from app.api.models.dto import (
     GenerationSlugRequestDTO
 )
 
+logger = logging.getLogger(__name__)
+
 
 class SlugLinksService:
     def __init__(self, sl_gen: SlugGenerator, slug_repo: SlugRepository):
@@ -20,6 +24,7 @@ class SlugLinksService:
         slug = self.sl_gen.generate()
         try:
             await self.repo.add_slug(slug, str(long_url_dto.long_url))
+            logger.info("Slug generated", extra={"event": "slug_generated", "slug": slug})
             return SlugGenerationResultDTO(slug=slug)
         except IntegrityError:
             raise SlugAlreadyExistsException(slug)
@@ -31,5 +36,6 @@ class SlugLinksService:
         if not long_url:
             raise LongUrlNotFoundException(slug)
 
+        logger.info("Slug resolved", extra={"event": "slug_resolved", "slug": slug})
         return RedirectLookupResultDTO(long_url=HttpUrl(long_url))
 

@@ -20,7 +20,6 @@ def register_routes(app):
             slug_service: SlugLinksService = Depends(api_deps.get_slug_service)
     ):
         result = await slug_service.get_long_url(slug)
-        print(result.long_url)
         return RedirectResponse(
             url=str(result.long_url),
             status_code=302
