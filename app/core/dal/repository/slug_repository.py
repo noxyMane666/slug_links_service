@@ -5,6 +5,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dal.models.db_models import ShortURL
+from app.core.models.slug_models import SlugUpdateModel, SlugModel
+from app.exceptions.domain_exceptions import LongUrlNotFoundException
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +33,50 @@ class SlugRepository:
             raise
 
 
-    async def get_long_url_by_slug(self, slug: str) -> str | None:
-        query = select(ShortURL.long_url).where(
-            ShortURL.slug == slug
+    async def get_slug(self, slug: str) -> SlugModel:
+        query = (
+            select(ShortURL)
+            .where(
+                ShortURL.slug == slug
+            )
         )
 
-        return await self._session.scalar(query)
+        try:
+            slug_obj = await self._session.scalar(query)
+            return SlugModel.model_validate(slug_obj)
+        except Exception:
+            await self._session.rollback()
+            logger.error("Unexpected DB error on slug update, transaction rolled back", exc_info=True)
+            raise
+
+    async def update_slug(self, update_model: SlugUpdateModel) -> SlugUpdateModel:
+        query = (
+            select(ShortURL)
+            .where(
+                ShortURL.slug == update_model.slug
+            )
+            .with_for_update()
+        )
+
+        try:
+            slug_obj = await self._session.scalar(query)
+
+            if not slug_obj:
+                raise LongUrlNotFoundException(update_model.slug)
+
+            update_data = update_model.model_dump(
+                exclude_unset=True,
+                exclude={"slug"}
+            )
+
+            for field, value in update_data.items():
+                setattr(slug_obj, field, value)
+
+            self._session.add(slug_obj)
+            await self._session.commit()
+            logger.info("Slug successfully updated", extra={"event": "slug_updating"})
+            return  update_model
+        except Exception:
+            await self._session.rollback()
+            logger.error("Unexpected DB error on slug update, transaction rolled back", exc_info=True)
+            raise
