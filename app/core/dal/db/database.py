@@ -14,6 +14,9 @@ class AppDataBase:
         self.engine: AsyncEngine = create_async_engine(
             settings.DB_CONNECTION_STRING,
             echo=False,
+            pool_size=settings.pool_size,
+            max_overflow=settings.pool_max_overflow,
+            pool_timeout=settings.pool_timeout
         )
         self.session_factory = async_sessionmaker(
             bind=self.engine,

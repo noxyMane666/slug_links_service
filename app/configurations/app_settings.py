@@ -1,5 +1,6 @@
-from dataclasses import dataclass
 from enum import Enum
+
+from pydantic import BaseModel, Field, PostgresDsn
 
 
 class LogLevels(Enum):
@@ -8,14 +9,14 @@ class LogLevels(Enum):
     WARNING = "WARNING"
     ERROR = "ERROR"
 
-@dataclass(frozen=True)
-class DBSettings:
-    DB_CONNECTION_STRING: str
-    ECHO: bool
-    POOL_SIZE: int
-    POOL_MAX_OVERFLOW: int
-    POOL_TIMEOUT: int
 
-@dataclass(frozen=True)
-class LogLevelSetting:
-    LOG_LEVEL: LogLevels = LogLevels.INFO
+class DBSettings(BaseModel):
+    connection_string: PostgresDsn = Field(alias="DB_CONNECTION_STRING")
+    echo: bool = Field(default=False, alias="DB_ECHO")
+    pool_size: int = Field(default=20, alias="DB_MAX_POOL_SIZE")
+    pool_max_overflow: int = Field(default=10, alias="DB_POOL_MAX_OVERFLOW")
+    pool_timeout: int = Field(default=30, alias="DB_POOL_TIMEOUT")
+
+
+class LogLevelSetting(BaseModel):
+    LOG_LEVEL: LogLevels = Field(default=LogLevels.INFO, alias="LOG_LEVEL")

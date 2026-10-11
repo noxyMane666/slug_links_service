@@ -15,14 +15,17 @@ class SlugRepository:
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def add_slug(self, slug: str, long_url: str):
+    async def add_slug(self, slug: str, long_url: str) -> SlugModel:
+        # TODO: Сделать redirect_count server_default = 0 и not nullable
         new_slug = ShortURL(
             slug=slug,
-            long_url=long_url
+            long_url=long_url,
+            redirect_count=0
         )
         try:
             self._session.add(new_slug)
             await self._session.commit()
+            return SlugModel.model_validate(new_slug)
         except IntegrityError:
             await self._session.rollback()
             logger.info("Slug collision on insert, transaction rolled back", extra={"event": "slug_collision"})
