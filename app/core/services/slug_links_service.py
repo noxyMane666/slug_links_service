@@ -10,9 +10,8 @@ from app.exceptions.domain_exceptions import (
     SlugIdentifierCollision
 )
 from app.api.models.dto import (
-    SlugGenerationResultDTO,
-    RedirectLookupResultDTO,
-    GenerationSlugRequestDTO
+    GenerationSlugRequestDTO,
+    BaseSlugResponseDTO
 )
 
 logger = logging.getLogger(__name__)
@@ -23,22 +22,22 @@ class SlugLinksService:
         self.sl_gen = sl_gen
         self.repo = slug_repo
 
-    async def generate_slug(self, long_url_dto: GenerationSlugRequestDTO) -> SlugGenerationResultDTO:
+    async def generate_slug(self, long_url_dto: GenerationSlugRequestDTO) -> BaseSlugResponseDTO:
         slug = self.sl_gen.generate()
         try:
-            await self.repo.add_slug(slug, str(long_url_dto.long_url))
+            slug_obj = await self.repo.add_slug(slug, str(long_url_dto.long_url))
             logger.info("Slug generated", extra={"event": "slug_generated", "slug": slug})
-            return SlugGenerationResultDTO(slug=slug)
+            return BaseSlugResponseDTO.model_validate(slug_obj)
         except SlugIdentifierCollision:
             logger.error("Slug generation failed", extra={"event": "slug_generation_failed", "slug": slug})
             raise SlugAlreadyExistsException(slug)
 
 
-    async def get_long_url(self, slug: str) -> RedirectLookupResultDTO:
+    async def get_long_url_to_redirect(self, slug: str) -> BaseSlugResponseDTO:
         slug_obj = await self.repo.get_slug(slug)
         slug_update_model = SlugUpdateModel(slug=slug, redirect_count=slug_obj.redirect_count + 1)
         await self.repo.update_slug(slug_update_model)
 
         logger.info("Slug resolved", extra={"event": "slug_resolved", "slug": slug})
-        return RedirectLookupResultDTO(long_url=HttpUrl(slug_obj.long_url))
+        return BaseSlugResponseDTO.model_validate(slug_obj)
 
