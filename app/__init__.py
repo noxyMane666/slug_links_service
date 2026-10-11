@@ -17,6 +17,7 @@ logger = getLogger(__name__)
 def create_app_lifespan(config: Configuration):
     @asynccontextmanager
     async def app_lifespan(app: FastAPI):
+        app.state.config = config
         db = AppDataBase(config.db_settings)
 
         try:
@@ -37,7 +38,7 @@ def create_app_lifespan(config: Configuration):
 
 def create_app() -> FastAPI:
     config = Configuration()
-    setup_logging(config.log_level.LOG_LEVEL.value)
+    setup_logging(config.logger_settings.log_level.value)
 
     app = FastAPI(lifespan=create_app_lifespan(config))
     register_exception_handler(app)

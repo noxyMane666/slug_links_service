@@ -18,5 +18,9 @@ class DBSettings(BaseModel):
     pool_timeout: int = Field(default=30, alias="DB_POOL_TIMEOUT")
 
 
-class LogLevelSetting(BaseModel):
-    LOG_LEVEL: LogLevels = Field(default=LogLevels.INFO, alias="LOG_LEVEL")
+class LogSetting(BaseModel):
+    log_level: LogLevels = Field(default=LogLevels.INFO, alias="LOG_LEVEL")
+
+
+class SlugGeneratingSettings(BaseModel):
+    generation_collision_overflow: int = Field(default=3, alias="SLUGGEN_COLLISION_OVERFLOW")
