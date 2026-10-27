@@ -12,7 +12,7 @@ from app.configurations.app_settings import DBSettings
 class AppDataBase:
     def __init__(self, settings: DBSettings):
         self.engine: AsyncEngine = create_async_engine(
-            settings.DB_CONNECTION_STRING,
+            str(settings.connection_string),
             echo=False,
             pool_size=settings.pool_size,
             max_overflow=settings.pool_max_overflow,
