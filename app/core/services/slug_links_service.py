@@ -1,7 +1,7 @@
 import logging
 
 from app.configurations.app_settings import SlugGeneratingSettings
-from app.core.models.slug_models import SlugUpdateModel
+from app.core.models.slug_models import SlugUpdateModel, SlugModel
 from app.core.slug_generators.interface import SlugGenerator
 from app.core.dal.repository.slug_repository import SlugRepository
 from app.exceptions.domain_exceptions import (
@@ -22,7 +22,7 @@ class SlugLinksService:
         self._repo = slug_repo
         self._config = config
 
-    async def generate_slug(self, long_url_dto: GenerationSlugRequestDTO) -> BaseSlugResponseDTO:
+    async def generate_slug(self, long_url_dto: GenerationSlugRequestDTO) -> SlugModel:
         attempts_count = 0
         slug = ""
 
@@ -31,7 +31,7 @@ class SlugLinksService:
             try:
                 slug_obj = await self._repo.add_slug(slug, str(long_url_dto.long_url))
                 logger.info("Slug generated", extra={"event": "slug_generated", "slug": slug})
-                return BaseSlugResponseDTO.model_validate(slug_obj)
+                return slug_obj
             except SlugIdentifierCollision:
                 logger.error("Slug generation failed", extra={
                     "event": "slug_generation_failed",
@@ -44,11 +44,11 @@ class SlugLinksService:
         raise SlugAlreadyExistsException(slug)
 
 
-    async def get_long_url_to_redirect(self, slug: str) -> BaseSlugResponseDTO:
+    async def get_long_url_to_redirect(self, slug: str) -> SlugModel:
         slug_obj = await self._repo.get_slug(slug)
         slug_update_model = SlugUpdateModel(slug=slug, redirect_count=slug_obj.redirect_count + 1)
         await self._repo.update_slug(slug_update_model)
 
         logger.info("Slug resolved", extra={"event": "slug_resolved", "slug": slug})
-        return BaseSlugResponseDTO.model_validate(slug_obj)
+        return slug_obj
 

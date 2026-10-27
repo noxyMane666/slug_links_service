@@ -46,6 +46,10 @@ class SlugRepository:
 
         try:
             slug_obj = await self._session.scalar(query)
+
+            if not slug_obj:
+                raise LongUrlNotFoundException(slug)
+
             return SlugModel.model_validate(slug_obj)
         except Exception:
             await self._session.rollback()
