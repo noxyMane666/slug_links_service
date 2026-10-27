@@ -14,7 +14,7 @@ def register_routes(app):
     ) -> BaseSlugResponseDTO:
         return await slug_service.generate_slug(long_url)
 
-    @app.get("/{slug}")
+    @app.get("/slugs/{slug}")
     async def get_link(
             slug: str,
             slug_service: SlugLinksService = Depends(api_deps.get_slug_service)
