@@ -38,7 +38,7 @@ def create_app_lifespan(config: Configuration):
 
 def create_app() -> FastAPI:
     config = Configuration()
-    setup_logging(config.logger_settings.log_level.value)
+    setup_logging(config.log_settings.level.value)
 
     app = FastAPI(lifespan=create_app_lifespan(config))
     register_exception_handler(app)
