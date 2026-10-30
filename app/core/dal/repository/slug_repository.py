@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dal.models.db_models import ShortURL
 from app.core.models.slug_models import SlugUpdateModel, SlugModel
-from app.exceptions.domain_exceptions import LongUrlNotFoundException
+from app.exceptions.domain_exceptions import LongUrlNotFoundException, SlugIdentifierCollision
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +27,10 @@ class SlugRepository:
             await self._session.commit()
             return SlugModel.model_validate(new_slug)
         except IntegrityError:
+            #TODO: Проверять IntegrityError именно на нарушение unique_constraint
             await self._session.rollback()
             logger.info("Slug collision on insert, transaction rolled back", extra={"event": "slug_collision"})
-            raise
+            raise SlugIdentifierCollision(slug)
         except Exception:
             await self._session.rollback()
             logger.error("Unexpected DB error on slug insert, transaction rolled back", exc_info=True)
