@@ -8,10 +8,7 @@ from app.exceptions.domain_exceptions import (
     SlugAlreadyExistsException,
     SlugIdentifierCollision
 )
-from app.api.models.dto import (
-    GenerationSlugRequestDTO,
-    BaseSlugResponseDTO
-)
+from app.api.models.dto import GenerationSlugRequestDTO
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +23,7 @@ class SlugLinksService:
         attempts_count = 0
         slug = ""
 
-        while attempts_count < self._config.generation_collision_overflow:
+        while attempts_count < self._config.collision_overflow:
             slug = self._sl_gen.generate()
             try:
                 slug_obj = await self._repo.add_slug(slug, str(long_url_dto.long_url))
@@ -46,6 +43,7 @@ class SlugLinksService:
 
     async def get_long_url_to_redirect(self, slug: str) -> SlugModel:
         slug_obj = await self._repo.get_slug(slug)
+        #TODO: Поправить конкурентность инкремента
         slug_update_model = SlugUpdateModel(slug=slug, redirect_count=slug_obj.redirect_count + 1)
         await self._repo.update_slug(slug_update_model)
 
